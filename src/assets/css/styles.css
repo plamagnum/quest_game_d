@@ -1,0 +1,682 @@
+/**
+ * ============================================
+ * Стилі квест-додатку «Безпека в Інтернеті»
+ * ============================================
+ *
+ * Три режими (перемикач у шапці):
+ *   - Tailwind CSS (CDN)
+ *   - Bootstrap (CDN)
+ *   - Чистий CSS (цей файл)
+ *
+ * Адаптивний дизайн: mobile-first.
+ * ============================================
+ */
+
+/* ===================== Змінні ===================== */
+:root {
+    --primary: #3b82f6;
+    --primary-hover: #2563eb;
+    --success: #10b981;
+    --success-hover: #059669;
+    --danger: #ef4444;
+    --danger-hover: #dc2626;
+    --warning: #f59e0b;
+    --warning-hover: #d97706;
+    --dark: #1e293b;
+    --light: #f8fafc;
+    --gray: #64748b;
+    --gray-light: #e2e8f0;
+    --border-radius: 12px;
+    --shadow: 0 4px 20px rgba(0,0,0,0.1);
+    --shadow-lg: 0 10px 40px rgba(0,0,0,0.15);
+    --transition: all 0.3s ease;
+    --team1: #3b82f6;
+    --team1-bg: #dbeafe;
+    --team2: #ef4444;
+    --team2-bg: #fee2e2;
+    --buzz-size: 200px;
+}
+
+/* ===================== Reset ===================== */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: var(--dark);
+    min-height: 100vh;
+    line-height: 1.6;
+}
+
+/* ===================== Перемикач тем ===================== */
+.theme-switcher {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 9999;
+    background: rgba(255,255,255,0.95);
+    padding: 6px 12px;
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    backdrop-filter: blur(10px);
+}
+.theme-switcher label { font-weight: 600; cursor: pointer; }
+.theme-switcher select {
+    border: 1px solid var(--gray-light);
+    border-radius: 8px;
+    padding: 3px 8px;
+    font-size: 12px;
+    background: #fff;
+    cursor: pointer;
+    outline: none;
+}
+
+/* ===================== Утиліти ===================== */
+.hidden { display: none !important; }
+.mb-8 { margin-bottom: 8px; }
+
+.btn-primary, .btn-success, .btn-danger, .btn-warning, .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 24px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    transition: var(--transition);
+    color: #fff;
+}
+.btn-primary   { background: var(--primary); }
+.btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); }
+.btn-success   { background: var(--success); }
+.btn-success:hover { background: var(--success-hover); }
+.btn-danger    { background: var(--danger); }
+.btn-danger:hover  { background: var(--danger-hover); }
+.btn-warning   { background: var(--warning); }
+.btn-warning:hover { background: var(--warning-hover); }
+.btn-secondary { background: var(--gray-light); color: var(--dark); border: 1px solid var(--gray-light); }
+.btn-secondary:hover { background: #cbd5e1; }
+.btn-full { width: 100%; justify-content: center; }
+
+.btn-link {
+    color: #fff;
+    text-decoration: none;
+    padding: 6px 14px;
+    border-radius: 6px;
+    transition: var(--transition);
+    font-size: 14px;
+}
+.btn-link:hover { background: rgba(255,255,255,0.2); }
+
+.btn-logout {
+    background: rgba(255,255,255,0.2);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.3);
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: var(--transition);
+}
+.btn-logout:hover { background: rgba(255,255,255,0.3); }
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 13px;
+    border-radius: 6px;
+}
+
+/* ===================== Логін ===================== */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+.login-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 40px;
+    width: 100%;
+    max-width: 440px;
+    box-shadow: var(--shadow-lg);
+    animation: slideUp 0.5s ease;
+}
+@keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+}
+.login-header { text-align: center; margin-bottom: 28px; }
+.login-header h1 { font-size: 2rem; margin-bottom: 4px; }
+.login-header h2 { font-size: 1.1rem; color: var(--gray); font-weight: 500; }
+.login-subtitle { color: var(--gray); font-size: 0.9rem; margin-top: 8px; }
+.login-footer { text-align: center; margin-top: 20px; color: var(--gray); font-size: 13px; }
+
+/* Повідомлення */
+.auth-message {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    text-align: center;
+}
+.auth-message.msg-success { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+.auth-message.msg-error   { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+
+/* Табки логіну */
+.auth-tabs {
+    display: flex;
+    margin-bottom: 24px;
+    background: var(--gray-light);
+    border-radius: 10px;
+    padding: 4px;
+}
+.auth-tab {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: var(--transition);
+    color: var(--gray);
+}
+.auth-tab.active {
+    background: #fff;
+    color: var(--primary);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Форми */
+.form-group { margin-bottom: 16px; }
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+    font-size: 14px;
+    color: var(--dark);
+}
+.form-group input[type="text"],
+.form-group input[type="password"],
+.form-group input[type="number"],
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid var(--gray-light);
+    border-radius: 8px;
+    font-size: 15px;
+    transition: var(--transition);
+    outline: none;
+    background: #fff;
+}
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+}
+
+/* Вибір команди */
+.team-selector { display: flex; gap: 12px; margin-top: 6px; }
+.team-option { flex: 1; cursor: pointer; }
+.team-option input { display: none; }
+.team-badge {
+    display: block;
+    padding: 14px;
+    border: 2px solid var(--gray-light);
+    border-radius: 10px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 15px;
+    transition: var(--transition);
+}
+.team-1 input:checked + .team-badge { border-color: var(--team1); background: var(--team1-bg); color: var(--team1); }
+.team-2 input:checked + .team-badge { border-color: var(--team2); background: var(--team2-bg); color: var(--team2); }
+
+.form-row { display: flex; gap: 16px; }
+.form-row .form-group { flex: 1; }
+.form-actions { display: flex; gap: 10px; margin-top: 10px; }
+
+/* ===================== Хедери ===================== */
+.quest-header, .admin-header, .results-header {
+    background: rgba(0,0,0,0.3);
+    backdrop-filter: blur(10px);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    color: #fff;
+}
+.quest-header h1, .admin-header h1, .results-header h1 { font-size: 1.1rem; }
+.header-left, .header-center, .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.user-info { font-size: 14px; opacity: 0.9; }
+
+.scoreboard-mini { display: flex; gap: 8px; font-size: 18px; font-weight: 700; align-items: center; }
+.score-sep { opacity: 0.5; }
+
+/* ===================== Квест — основний контент ===================== */
+.quest-main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px 20px;
+    min-height: calc(100vh - 60px);
+}
+.game-state { width: 100%; max-width: 700px; }
+
+/* Очікування */
+.waiting-screen {
+    text-align: center;
+    background: #fff;
+    border-radius: 20px;
+    padding: 60px 30px;
+    box-shadow: var(--shadow-lg);
+}
+.waiting-icon { font-size: 4rem; margin-bottom: 16px; }
+.waiting-screen h2 { font-size: 1.5rem; margin-bottom: 10px; }
+.waiting-screen p { color: var(--gray); }
+
+.pulse-dot {
+    width: 16px;
+    height: 16px;
+    background: var(--primary);
+    border-radius: 50%;
+    margin: 20px auto 0;
+    animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50%      { transform: scale(1.5); opacity: 0.5; }
+}
+
+/* Запитання */
+.question-container {
+    background: #fff;
+    border-radius: 16px;
+    padding: 30px;
+    text-align: center;
+    box-shadow: var(--shadow);
+    margin-bottom: 30px;
+}
+.question-number { font-size: 13px; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+.question-text { font-size: 1.4rem; font-weight: 700; line-height: 1.5; color: var(--dark); }
+.question-points { margin-top: 12px; color: var(--primary); font-weight: 600; font-size: 14px; }
+
+/* ===================== BUZZ КНОПКА ===================== */
+.buzz-container { display: flex; flex-direction: column; align-items: center; margin: 20px 0 30px; }
+
+.buzz-button {
+    width: var(--buzz-size);
+    height: var(--buzz-size);
+    border-radius: 50%;
+    border: 6px solid rgba(255,255,255,0.4);
+    background: linear-gradient(145deg, #ef4444, #dc2626);
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    box-shadow:
+        0 8px 30px rgba(239,68,68,0.5),
+        inset 0 -4px 10px rgba(0,0,0,0.2),
+        inset 0 4px 10px rgba(255,255,255,0.2);
+    transition: all 0.15s ease;
+    animation: buzzPulse 2s infinite;
+    position: relative;
+    overflow: hidden;
+}
+.buzz-button::before {
+    content: '';
+    position: absolute;
+    top: 10%; left: 20%;
+    width: 60%; height: 30%;
+    background: radial-gradient(ellipse, rgba(255,255,255,0.3), transparent);
+    border-radius: 50%;
+}
+.buzz-icon { font-size: 3rem; margin-bottom: 4px; }
+.buzz-text { font-size: 1rem; line-height: 1.3; text-align: center; }
+
+@keyframes buzzPulse {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.05); }
+}
+.buzz-button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 12px 40px rgba(239,68,68,0.6), inset 0 -4px 10px rgba(0,0,0,0.2), inset 0 4px 10px rgba(255,255,255,0.2);
+}
+.buzz-button:active {
+    transform: scale(0.95);
+    box-shadow: 0 4px 15px rgba(239,68,68,0.4), inset 0 4px 10px rgba(0,0,0,0.3);
+}
+
+/* Кнопка заблокована (інша команда) */
+.buzz-button.locked {
+    background: linear-gradient(145deg, #9ca3af, #6b7280);
+    cursor: not-allowed;
+    animation: none;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+.buzz-button.locked:hover { transform: scale(1); }
+
+/* Кнопка — моя команда натиснула */
+.buzz-button.my-team-locked {
+    background: linear-gradient(145deg, #10b981, #059669);
+    animation: none;
+    cursor: default;
+}
+.buzz-button.my-team-locked:hover { transform: scale(1); }
+
+.buzz-status {
+    margin-top: 14px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    text-align: center;
+    min-height: 24px;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+/* ===================== Варіанти відповідей ===================== */
+.options-container {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+    animation: slideUp 0.3s ease;
+}
+.options-container h3 { text-align: center; margin-bottom: 16px; font-size: 1.1rem; }
+.options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.option-btn {
+    padding: 16px;
+    border: 2px solid var(--gray-light);
+    border-radius: 12px;
+    background: #fff;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 500;
+    transition: var(--transition);
+    text-align: center;
+    word-break: break-word;
+}
+.option-btn:hover { border-color: var(--primary); background: #eff6ff; transform: translateY(-2px); }
+.option-btn.correct { border-color: var(--success); background: #d1fae5; color: #065f46; }
+.option-btn.wrong   { border-color: var(--danger);  background: #fee2e2; color: #991b1b; }
+.option-btn:disabled { cursor: not-allowed; opacity: 0.7; }
+
+/* Результат відповіді */
+.answer-result {
+    text-align: center;
+    background: #fff;
+    border-radius: 16px;
+    padding: 30px;
+    box-shadow: var(--shadow);
+    animation: slideUp 0.3s ease;
+}
+.result-icon   { font-size: 4rem; margin-bottom: 10px; }
+.result-text   { font-size: 1.3rem; font-weight: 700; margin-bottom: 6px; }
+.result-points { font-size: 1.1rem; color: var(--gray); }
+
+/* ===================== Гра завершена ===================== */
+.gameover-screen {
+    text-align: center;
+    background: #fff;
+    border-radius: 20px;
+    padding: 50px 30px;
+    box-shadow: var(--shadow-lg);
+}
+.gameover-icon { font-size: 5rem; margin-bottom: 16px; }
+.gameover-screen h2 { font-size: 2rem; margin-bottom: 20px; }
+.final-scores { display: flex; justify-content: center; gap: 30px; margin-bottom: 30px; flex-wrap: wrap; }
+
+/* ===================== Результати ===================== */
+.results-main { padding: 30px 20px; max-width: 1100px; margin: 0 auto; }
+
+.results-scoreboard {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+}
+.score-big {
+    background: #fff;
+    border-radius: 16px;
+    padding: 30px 40px;
+    text-align: center;
+    box-shadow: var(--shadow);
+    min-width: 200px;
+}
+.team1-big { border-top: 4px solid var(--team1); }
+.team2-big { border-top: 4px solid var(--team2); }
+.score-team-name { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; }
+.score-value { font-size: 3rem; font-weight: 800; }
+.team1-big .score-value { color: var(--team1); }
+.team2-big .score-value { color: var(--team2); }
+.score-detail { font-size: 13px; color: var(--gray); margin-top: 6px; }
+.score-vs { font-size: 2rem; font-weight: 800; color: #fff; text-shadow: 0 2px 6px rgba(0,0,0,0.3); }
+
+.live-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    color: #fff;
+    font-size: 14px;
+    opacity: 0.9;
+}
+.live-dot {
+    width: 10px; height: 10px;
+    background: #10b981;
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+}
+.empty-message { text-align: center; color: var(--gray); padding: 30px; font-size: 15px; }
+
+/* ===================== Адмін ===================== */
+.admin-tabs {
+    display: flex;
+    background: rgba(0,0,0,0.2);
+    padding: 8px;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+.admin-tab {
+    flex: 1;
+    padding: 10px 16px;
+    border: none;
+    background: transparent;
+    color: rgba(255,255,255,0.7);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: var(--transition);
+    white-space: nowrap;
+}
+.admin-tab.active { background: rgba(255,255,255,0.2); color: #fff; }
+.admin-tab:hover  { background: rgba(255,255,255,0.15); color: #fff; }
+
+.admin-section { padding: 24px; max-width: 1200px; margin: 0 auto; }
+.admin-section h2 { color: #fff; margin-bottom: 20px; font-size: 1.5rem; }
+
+.game-status-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+}
+.game-status-card h3 { margin-bottom: 10px; }
+.game-status-card p { margin: 4px 0; font-size: 14px; }
+
+.game-buttons { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+
+.admin-scores { margin-bottom: 20px; }
+.admin-scores h3 { color: #fff; margin-bottom: 10px; }
+.scores-row { display: flex; gap: 16px; flex-wrap: wrap; }
+
+.score-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px 30px;
+    text-align: center;
+    box-shadow: var(--shadow);
+    flex: 1;
+    min-width: 150px;
+}
+.score-card span { display: block; font-size: 14px; margin-bottom: 6px; }
+.score-card strong { font-size: 2rem; }
+.team1-card { border-top: 3px solid var(--team1); }
+.team1-card strong { color: var(--team1); }
+.team2-card { border-top: 3px solid var(--team2); }
+.team2-card strong { color: var(--team2); }
+
+.question-form-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow);
+}
+.question-form-card h3 { margin-bottom: 16px; }
+
+.analytics-controls {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+.analytics-controls input {
+    padding: 8px 14px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 8px;
+    font-size: 14px;
+    background: rgba(255,255,255,0.9);
+    outline: none;
+    flex: 1;
+    max-width: 300px;
+}
+
+/* ===================== Таблиці ===================== */
+.table-responsive { overflow-x: auto; }
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    font-size: 14px;
+}
+.data-table thead { background: var(--dark); color: #fff; }
+.data-table th {
+    padding: 12px 14px;
+    text-align: left;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.data-table th.sortable { cursor: pointer; }
+.data-table th.sortable:hover { background: rgba(255,255,255,0.1); }
+.data-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--gray-light);
+    word-break: break-word;
+}
+.data-table tbody tr:hover { background: #f1f5f9; }
+.data-table tbody tr:last-child td { border-bottom: none; }
+
+.badge-correct {
+    background: #d1fae5;
+    color: #065f46;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 12px;
+}
+.badge-wrong {
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+/* ===================== Адаптивність ===================== */
+@media (max-width: 768px) {
+    :root { --buzz-size: 160px; }
+
+    .quest-header, .admin-header, .results-header {
+        flex-direction: column;
+        text-align: center;
+        padding: 10px 16px;
+    }
+    .header-left, .header-center, .header-right {
+        justify-content: center;
+    }
+
+    .login-card { padding: 24px; margin: 10px; }
+    .login-header h1 { font-size: 1.5rem; }
+
+    .question-text { font-size: 1.1rem; }
+    .question-container { padding: 20px; }
+
+    .options-grid { grid-template-columns: 1fr; }
+    .option-btn { padding: 12px; }
+
+    .buzz-icon { font-size: 2.2rem; }
+    .buzz-text { font-size: 0.85rem; }
+
+    .results-scoreboard { flex-direction: column; gap: 12px; }
+    .score-big { padding: 20px 30px; min-width: unset; width: 100%; }
+    .score-vs { font-size: 1.5rem; }
+    .score-value { font-size: 2.2rem; }
+
+    .admin-tabs { flex-direction: column; }
+    .admin-tab { text-align: center; }
+    .admin-section { padding: 16px; }
+    .game-buttons { flex-direction: column; }
+    .game-buttons button { width: 100%; }
+    .scores-row { flex-direction: column; }
+
+    .form-row { flex-direction: column; gap: 0; }
+    .team-selector { flex-direction: column; }
+}
+
+@media (max-width: 480px) {
+    :root { --buzz-size: 140px; }
+    .buzz-icon { font-size: 1.8rem; }
+    .buzz-text { font-size: 0.75rem; }
+    .login-card { padding: 20px 16px; }
+    .scoreboard-mini { font-size: 15px; }
+}
+
+@media (min-width: 1200px) {
+    :root { --buzz-size: 240px; }
+    .buzz-icon { font-size: 3.5rem; }
+    .buzz-text { font-size: 1.15rem; }
+}
