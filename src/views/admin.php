@@ -110,6 +110,83 @@ function escAdm(string $s): string {
                 </div>
             </div>
         </div>
+
+        <!-- Ручне керування балами -->
+        <div class="game-status-card" style="margin-top:20px">
+            <h3>⚖️ Ручне керування балами</h3>
+            <form id="adjust-score-form" onsubmit="handleAdjustScore(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="adjust-team">Команда</label>
+                        <select id="adjust-team" required>
+                            <option value="1">🔵 Команда 1</option>
+                            <option value="2">🔴 Команда 2</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="adjust-points">Бали (+ або −)</label>
+                        <input type="number" id="adjust-points" placeholder="напр. 10 або -5" required min="-1000" max="1000" step="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="adjust-reason">Причина (необов'язково)</label>
+                        <input type="text" id="adjust-reason" placeholder="Причина..." maxlength="255">
+                    </div>
+                    <div class="form-group" style="display:flex;align-items:flex-end">
+                        <button type="submit" class="btn-primary">✅ Застосувати</button>
+                    </div>
+                </div>
+            </form>
+            <!-- Швидкі кнопки -->
+            <div style="margin-top:12px">
+                <strong>Швидко:</strong>
+                <button onclick="quickAdjust(1,5)"  class="btn-success btn-sm" style="margin:2px">🔵 +5</button>
+                <button onclick="quickAdjust(1,10)" class="btn-success btn-sm" style="margin:2px">🔵 +10</button>
+                <button onclick="quickAdjust(1,-5)" class="btn-danger btn-sm"  style="margin:2px">🔵 −5</button>
+                <button onclick="quickAdjust(1,-10)" class="btn-danger btn-sm"  style="margin:2px">🔵 −10</button>
+                &nbsp;
+                <button onclick="quickAdjust(2,5)"  class="btn-success btn-sm" style="margin:2px">🔴 +5</button>
+                <button onclick="quickAdjust(2,10)" class="btn-success btn-sm" style="margin:2px">🔴 +10</button>
+                <button onclick="quickAdjust(2,-5)" class="btn-danger btn-sm"  style="margin:2px">🔴 −5</button>
+                <button onclick="quickAdjust(2,-10)" class="btn-danger btn-sm"  style="margin:2px">🔴 −10</button>
+            </div>
+            <!-- Таблиця коригувань -->
+            <div style="margin-top:16px">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                    <strong>📋 Історія коригувань</strong>
+                    <button onclick="clearAllAdjustments()" class="btn-danger btn-sm">🗑️ Очистити все</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table" id="adjustments-table">
+                        <thead>
+                            <tr>
+                                <th>Команда</th>
+                                <th>Бали</th>
+                                <th>Причина</th>
+                                <th>Адмін</th>
+                                <th>Час</th>
+                                <th>Дія</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adjustments-tbody">
+                            <tr><td colspan="6" style="text-align:center;color:#888">Немає коригувань</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Перемикач показу варіантів відповідей -->
+        <div class="game-status-card" style="margin-top:20px">
+            <h3>🎛️ Налаштування гри</h3>
+            <div style="display:flex;align-items:center;gap:12px">
+                <label class="toggle-switch" for="toggle-show-options">
+                    <input type="checkbox" id="toggle-show-options" onchange="handleToggleOptions()" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+                <span>📋 Показувати варіанти відповідей гравцям</span>
+            </div>
+            <p style="margin-top:8px;font-size:0.85em;color:#666">Коли вимкнено — після buzz гравець бачить лише текст запитання і відповідає усно.</p>
+        </div>
     </section>
 
     <!-- ===== ВКЛАДКА: Запитання (CRUD) ===== -->

@@ -66,8 +66,23 @@ try {
             }
 
             // Рахунок
-                        // Назви команд
+            $scores = getTeamScores($db);
+
+            // Назви команд
             $teamNames = getTeamNames($db);
+
+            // Налаштування показу варіантів
+            $showOptions = true;
+            try {
+                $stmt = $db->prepare("SELECT `value` FROM settings WHERE `key` = 'show_options'");
+                $stmt->execute();
+                $val = $stmt->fetchColumn();
+                if ($val !== false) {
+                    $showOptions = ($val === '1');
+                }
+            } catch (PDOException $e) {
+                // Таблиця може не існувати
+            }
 
             echo json_encode([
                 'success' => true,
@@ -83,6 +98,7 @@ try {
                     'scores'             => $scores,
                     'team1_name'         => $teamNames['team1_name'],
                     'team2_name'         => $teamNames['team2_name'],
+                    'show_options'       => $showOptions,
                 ],
             ], JSON_UNESCAPED_UNICODE);
             break;

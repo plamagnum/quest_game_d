@@ -88,6 +88,30 @@ CREATE TABLE IF NOT EXISTS `user_analytics` (
     INDEX `idx_ua_user` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ----------------------------
+-- Таблиця: settings
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `settings` (
+    `id`    INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `key`   VARCHAR(50) NOT NULL UNIQUE,
+    `value` VARCHAR(255) NOT NULL DEFAULT '',
+    INDEX `idx_key` (`key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ----------------------------
+-- Таблиця: score_adjustments
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `score_adjustments` (
+    `id`         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `team`       TINYINT UNSIGNED NOT NULL COMMENT '1 або 2',
+    `points`     INT NOT NULL COMMENT 'Додатні = додати, від''ємні = відняти',
+    `reason`     VARCHAR(255) NOT NULL DEFAULT '',
+    `admin_id`   INT UNSIGNED NOT NULL,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (`admin_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+    INDEX `idx_team` (`team`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- =============================================================
 -- ПОЧАТКОВІ ДАНІ
 -- =============================================================
@@ -100,6 +124,12 @@ INSERT INTO `users` (`username`, `password_hash`, `team`, `role`) VALUES
 -- Ініціалізація стану гри (один рядок з id=1)
 INSERT INTO `game_state` (`id`, `current_question_id`, `is_button_locked`, `is_game_active`)
 VALUES (1, NULL, 0, 0);
+
+-- Початкові налаштування
+INSERT INTO `settings` (`key`, `value`) VALUES
+('team1_name', 'Команда 1'),
+('team2_name', 'Команда 2'),
+('show_options', '1');
 
 -- =============================================================
 -- 15 запитань про безпеку в Інтернеті (українською)
