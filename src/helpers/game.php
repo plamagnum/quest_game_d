@@ -42,7 +42,7 @@ function getGameState(PDO $db): array
  * Отримати рахунок по командах
  *
  * Повертає масив з двох елементів (Команда 1, Команда 2),
- * кожен з полями: team, total_points, correct_answers, total_answers.
+ * кожен з полями: team, total_points, correct_answers, total_answers, adjustment.
  *
  * @param PDO $db PDO з'єднання
  * @return array [0 => дані команди 1, 1 => дані команди 2]
@@ -63,21 +63,49 @@ function getTeamScores(PDO $db): array
 
     $rows = $stmt->fetchAll();
 
+    // Отримати ручні коригування балів по командах
+    $adjustments = [1 => 0, 2 => 0];
+    try {
+        $adjStmt = $db->query(
+            'SELECT team, COALESCE(SUM(points), 0) AS adjustment
+             FROM score_adjustments
+             GROUP BY team'
+        );
+        foreach ($adjStmt->fetchAll() as $adj) {
+            $adjustments[(int)$adj['team']] = (int)$adj['adjustment'];
+        }
+    } catch (PDOException $e) {
+        // Таблиця може не існувати
+    }
+
     // Завжди повертаємо обидві команди, навіть якщо в одній немає гравців
     $scores = [
-        ['team' => 1, 'total_points' => 0, 'correct_answers' => 0, 'total_answers' => 0],
-        ['team' => 2, 'total_points' => 0, 'correct_answers' => 0, 'total_answers' => 0],
+        ['team' => 1, 'total_points' => 0, 'correct_answers' => 0, 'total_answers' => 0, 'adjustment' => 0],
+        ['team' => 2, 'total_points' => 0, 'correct_answers' => 0, 'total_answers' => 0, 'adjustment' => 0],
     ];
 
     foreach ($rows as $row) {
         $index = (int)$row['team'] - 1;
         if (isset($scores[$index])) {
+            $team = (int)$row['team'];
+            $adj  = $adjustments[$team] ?? 0;
             $scores[$index] = [
-                'team'            => (int)$row['team'],
-                'total_points'    => (int)$row['total_points'],
+                'team'            => $team,
+                'total_points'    => (int)$row['total_points'] + $adj,
                 'correct_answers' => (int)$row['correct_answers'],
                 'total_answers'   => (int)$row['total_answers'],
+                'adjustment'      => $adj,
             ];
+        }
+    }
+
+    // Для команд без гравців теж додаємо коригування
+    foreach ([0, 1] as $index) {
+        if ($scores[$index]['total_answers'] === 0) {
+            $team = $scores[$index]['team'];
+            $adj  = $adjustments[$team] ?? 0;
+            $scores[$index]['adjustment']   = $adj;
+            $scores[$index]['total_points'] = $adj;
         }
     }
 

@@ -55,6 +55,7 @@ document.addEventListener('DOMContentLoaded', function () {
         loadQuestions();
         loadAnalytics();
         loadDetailedResults();
+        loadAdjustments();
     } else if (page === 'results') {
         collectAnalytics();
         loadTeamNames();
@@ -452,9 +453,27 @@ function updateBuzzButton(data) {
         buzzBtn.querySelector('.buzz-text').innerHTML = 'Ви<br>натиснули!';
         if (buzzStatus) buzzStatus.textContent = 'Оберіть відповідь нижче!';
 
-        // Показати варіанти тільки натиснувшему
+        // Показати варіанти тільки натиснувшему (якщо увімкнено)
         if (data.current_question && data.current_question.options) {
-            showOptions(data.current_question.options);
+            if (data.show_options === false) {
+                hideOptions();
+                var oralMsg = document.getElementById('oral-answer-msg');
+                if (!oralMsg) {
+                    oralMsg = document.createElement('div');
+                    oralMsg.id = 'oral-answer-msg';
+                    oralMsg.style.cssText = 'margin-top:12px;padding:12px;background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;text-align:center;font-weight:bold;';
+                    oralMsg.textContent = '🗣️ Відповідайте усно! Адміністратор оцінить вашу відповідь.';
+                    var optContainer = document.getElementById('options-container');
+                    if (optContainer && optContainer.parentNode) {
+                        optContainer.parentNode.insertBefore(oralMsg, optContainer);
+                    }
+                }
+                oralMsg.style.display = '';
+            } else {
+                var existingMsg = document.getElementById('oral-answer-msg');
+                if (existingMsg) existingMsg.style.display = 'none';
+                showOptions(data.current_question.options);
+            }
         }
     } else if (data.locked_by_team === data.my_team) {
         // Мій тімейт натиснув
@@ -708,6 +727,12 @@ function pollAdminState() {
 
         if (scoreT1 && d.scores && d.scores[0]) scoreT1.textContent = d.scores[0].total_points;
         if (scoreT2 && d.scores && d.scores[1]) scoreT2.textContent = d.scores[1].total_points;
+
+        // Оновити стан перемикача show_options
+        var toggleOpts = document.getElementById('toggle-show-options');
+        if (toggleOpts && d.show_options !== undefined) {
+            toggleOpts.checked = (d.show_options === true);
+        }
     })
     .catch(function (err) {
         console.warn('Admin poll error:', err);
@@ -1246,5 +1271,201 @@ function handleTeamNamesSubmit(e) {
     })
     .catch(function (err) {
         alert('Помилка: ' + err.message);
+    });
+}
+// ================================================================
+// 9. РУЧНЕ КЕРУВАННЯ БАЛАМИ
+// ================================================================
+
+/**
+ * Обробка форми зміни балів (адмін)
+ * @param {Event} e
+ */
+function handleAdjustScore(e) {
+    e.preventDefault();
+
+    var team   = parseInt(document.getElementById('adjust-team').value, 10);
+    var points = parseInt(document.getElementById('adjust-points').value, 10);
+    var reason = document.getElementById('adjust-reason').value.trim();
+
+    if (team !== 1 && team !== 2 || isNaN(points) || points === 0) {
+        alert('Вкажіть команду та ненульові бали');
+        return;
+    }
+    if (Math.abs(points) > 1000) {
+        alert('Максимум ±1000 балів за раз');
+        return;
+    }
+
+    fetch('/api/settings.php?action=adjust_score', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ team: team, points: points, reason: reason })
+    })
+    .then(function (res) { return res.json(); })
+    .then(function (data) {
+        if (data.success) {
+            document.getElementById('adjust-points').value = '';
+            document.getElementById('adjust-reason').value = '';
+            loadAdjustments();
+            pollAdminState();
+        } else {
+            alert('❌ ' + data.message);
+        }
+    })
+    .catch(function (err) {
+        alert('Помилка: ' + err.message);
+    });
+}
+
+/**
+ * Швидке коригування балів (кнопки +5/-5 тощо)
+ * @param {number} team  — 1 або 2
+ * @param {number} points — кількість балів (+ або -)
+ */
+function quickAdjust(team, points) {
+    fetch('/api/settings.php?action=adjust_score', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ team: team, points: points, reason: 'Швидке коригування' })
+    })
+    .then(function (res) { return res.json(); })
+    .then(function (data) {
+        if (data.success) {
+            loadAdjustments();
+            pollAdminState();
+        } else {
+            alert('❌ ' + data.message);
+        }
+    })
+    .catch(function (err) {
+        alert('Помилка: ' + err.message);
+    });
+}
+
+/**
+ * Завантажити та відобразити таблицю коригувань
+ */
+function loadAdjustments() {
+    fetch('/api/settings.php?action=adjustments')
+    .then(function (res) { return res.json(); })
+    .then(function (resp) {
+        if (!resp.success) return;
+        renderAdjustmentsTable(resp.data.adjustments || []);
+    })
+    .catch(function (err) {
+        console.warn('Load adjustments error:', err);
+    });
+}
+
+/**
+ * Відрендерити таблицю коригувань
+ * @param {Array} adjustments
+ */
+function renderAdjustmentsTable(adjustments) {
+    var tbody = document.getElementById('adjustments-tbody');
+    if (!tbody) return;
+
+    if (adjustments.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#888">Немає коригувань</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = '';
+    adjustments.forEach(function (adj) {
+        var teamLabel = adj.team === 1 ? '🔵 Команда 1' : '🔴 Команда 2';
+        var pointsStr = adj.points > 0 ? ('+' + adj.points) : String(adj.points);
+        var pointsStyle = adj.points > 0 ? 'color:#16a34a;font-weight:bold' : 'color:#dc2626;font-weight:bold';
+
+        var tr = document.createElement('tr');
+        tr.innerHTML =
+            '<td>' + teamLabel + '</td>' +
+            '<td style="' + pointsStyle + '">' + pointsStr + '</td>' +
+            '<td>' + escapeHtml(adj.reason || '—') + '</td>' +
+            '<td>' + escapeHtml(adj.admin_username || '') + '</td>' +
+            '<td>' + escapeHtml(adj.created_at || '') + '</td>' +
+            '<td><button class="btn-danger btn-sm" onclick="deleteAdjustment(' + adj.id + ')">🗑️</button></td>';
+        tbody.appendChild(tr);
+    });
+}
+
+/**
+ * Видалити одне коригування
+ * @param {number} id
+ */
+function deleteAdjustment(id) {
+    if (!confirm('Видалити це коригування?')) return;
+
+    fetch('/api/settings.php?action=delete_adjust', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: id })
+    })
+    .then(function (res) { return res.json(); })
+    .then(function (data) {
+        if (data.success) {
+            loadAdjustments();
+            pollAdminState();
+        } else {
+            alert('❌ ' + data.message);
+        }
+    })
+    .catch(function (err) {
+        alert('Помилка: ' + err.message);
+    });
+}
+
+/**
+ * Видалити всі коригування
+ */
+function clearAllAdjustments() {
+    if (!confirm('Видалити всі коригування балів?')) return;
+
+    fetch('/api/settings.php?action=clear_adjustments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(function (res) { return res.json(); })
+    .then(function (data) {
+        if (data.success) {
+            loadAdjustments();
+            pollAdminState();
+        } else {
+            alert('❌ ' + data.message);
+        }
+    })
+    .catch(function (err) {
+        alert('Помилка: ' + err.message);
+    });
+}
+
+// ================================================================
+// 10. ПЕРЕМИКАЧ ПОКАЗУ ВАРІАНТІВ ВІДПОВІДЕЙ
+// ================================================================
+
+/**
+ * Обробка перемикача show_options (адмін)
+ */
+function handleToggleOptions() {
+    var toggle = document.getElementById('toggle-show-options');
+    if (!toggle) return;
+
+    var showOptions = toggle.checked;
+
+    fetch('/api/settings.php?action=toggle_options', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ show_options: showOptions })
+    })
+    .then(function (res) { return res.json(); })
+    .then(function (data) {
+        if (!data.success) {
+            alert('❌ ' + data.message);
+            toggle.checked = !showOptions; // відкотити
+        }
+    })
+    .catch(function (err) {
+        alert('Помилка: ' + err.message);
+        toggle.checked = !showOptions;
     });
 }
