@@ -55,6 +55,7 @@ document.addEventListener('DOMContentLoaded', function () {
         loadQuestions();
         loadAnalytics();
         loadDetailedResults();
+        loadPlayers();
     } else if (page === 'results') {
         collectAnalytics();
         loadTeamNames();
@@ -638,7 +639,7 @@ function renderFinalScores(scores) {
  * @param {string} tabName — 'game' | 'questions' | 'analytics' | 'results'
  */
 function switchAdminTab(tabName) {
-    var sections = ['game', 'questions', 'analytics', 'results'];
+    var sections = ['game', 'questions', 'analytics', 'results', 'players'];
     var nav = document.getElementById('admin-tabs-nav');
 
     sections.forEach(function (name) {
@@ -668,6 +669,7 @@ function switchAdminTab(tabName) {
     if (tabName === 'questions')  loadQuestions();
     if (tabName === 'analytics') loadAnalytics();
     if (tabName === 'results')   loadDetailedResults();
+    if (tabName === 'players')   loadPlayers();
 }
 
 /**
@@ -1247,4 +1249,169 @@ function handleTeamNamesSubmit(e) {
     .catch(function (err) {
         alert('Помилка: ' + err.message);
     });
+}
+
+// ================================================================
+// 9. ОБНУЛЕННЯ РАХУНКУ
+// ================================================================
+
+/**
+ * Обнулити рахунок гри (тільки адмін)
+ */
+function resetScores() {
+    if (!confirm('⚠️ Ви впевнені? Це видалить ВСІ відповіді гравців та обнулить рахунок!')) return;
+    if (!confirm('🔴 ОСТАННЄ ПОПЕРЕДЖЕННЯ! Цю дію НЕ можна скасувати. Продовжити?')) return;
+
+    fetch('/api/quest.php?action=reset_scores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(function (res) { return res.json(); })
+    .then(function (data) {
+        alert(data.message);
+        if (data.success) {
+            pollAdminState();
+            loadDetailedResults();
+        }
+    })
+    .catch(function (err) {
+        alert('Помилка: ' + err.message);
+    });
+}
+
+// ================================================================
+// 10. УПРАВЛІННЯ ГРАВЦЯМИ
+// ================================================================
+
+/** @type {Array} Кеш списку гравців для фільтрації */
+var playersCache = [];
+
+/**
+ * Завантажити список гравців
+ */
+function loadPlayers() {
+    fetch('/api/users.php?action=list')
+    .then(function (res) { return res.json(); })
+    .then(function (resp) {
+        if (!resp.success) return;
+        playersCache = resp.data.players || [];
+        renderPlayersTable(playersCache);
+    })
+    .catch(function (err) {
+        console.warn('Players load error:', err);
+    });
+}
+
+/**
+ * Відрендерити таблицю гравців
+ * @param {Array} players
+ */
+function renderPlayersTable(players) {
+    var tbody = document.getElementById('players-tbody');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
+    players.forEach(function (p) {
+        var tr = document.createElement('tr');
+        var statusBadge = p.is_blocked === 1 || p.is_blocked === '1'
+            ? '<span class="badge-wrong">🚫 Заблокований</span>'
+            : '<span class="badge-correct">✅ Активний</span>';
+
+        var actions = '';
+        if (p.role !== 'admin') {
+            if (p.is_blocked === 1 || p.is_blocked === '1') {
+                actions += '<button onclick="unblockPlayer(' + p.id + ')" class="btn-success btn-sm">🔓 Розблокувати</button> ';
+            } else {
+                actions += '<button onclick="blockPlayer(' + p.id + ')" class="btn-warning btn-sm">🔒 Заблокувати</button> ';
+            }
+            actions += '<button onclick="deletePlayer(' + p.id + ')" class="btn-danger btn-sm">🗑️ Видалити</button>';
+        }
+
+        tr.innerHTML =
+            '<td>' + escapeHtml(String(p.id)) + '</td>' +
+            '<td>' + escapeHtml(p.username) + '</td>' +
+            '<td>' + escapeHtml(String(p.team)) + '</td>' +
+            '<td>' + escapeHtml(p.role) + '</td>' +
+            '<td>' + statusBadge + '</td>' +
+            '<td>' + escapeHtml(p.created_at || '') + '</td>' +
+            '<td>' + actions + '</td>';
+        tbody.appendChild(tr);
+    });
+}
+
+/**
+ * Заблокувати гравця
+ * @param {number} userId
+ */
+function blockPlayer(userId) {
+    if (!confirm('Заблокувати цього гравця?')) return;
+
+    fetch('/api/users.php?action=block', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId })
+    })
+    .then(function (res) { return res.json(); })
+    .then(function (data) {
+        alert(data.message);
+        if (data.success) loadPlayers();
+    })
+    .catch(function (err) {
+        alert('Помилка: ' + err.message);
+    });
+}
+
+/**
+ * Розблокувати гравця
+ * @param {number} userId
+ */
+function unblockPlayer(userId) {
+    fetch('/api/users.php?action=unblock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId })
+    })
+    .then(function (res) { return res.json(); })
+    .then(function (data) {
+        alert(data.message);
+        if (data.success) loadPlayers();
+    })
+    .catch(function (err) {
+        alert('Помилка: ' + err.message);
+    });
+}
+
+/**
+ * Видалити гравця
+ * @param {number} userId
+ */
+function deletePlayer(userId) {
+    if (!confirm('Видалити цього гравця?')) return;
+    if (!confirm('🔴 ОСТАННЄ ПОПЕРЕДЖЕННЯ! Цю дію НЕ можна скасувати. Продовжити?')) return;
+
+    fetch('/api/users.php?action=delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId })
+    })
+    .then(function (res) { return res.json(); })
+    .then(function (data) {
+        alert(data.message);
+        if (data.success) loadPlayers();
+    })
+    .catch(function (err) {
+        alert('Помилка: ' + err.message);
+    });
+}
+
+/**
+ * Фільтрація таблиці гравців по імені
+ */
+function filterPlayers() {
+    var filter = (document.getElementById('players-filter').value || '').toLowerCase();
+    var filtered = playersCache.filter(function (p) {
+        return p.username.toLowerCase().indexOf(filter) !== -1;
+    });
+    renderPlayersTable(filtered);
 }

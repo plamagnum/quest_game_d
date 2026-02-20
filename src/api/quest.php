@@ -368,6 +368,35 @@ try {
             jsonResponse(200, true, 'Гру зупинено');
             break;
 
+        // ============================================================
+        // ОБНУЛИТИ РАХУНОК (тільки адмін)
+        // ============================================================
+        case 'reset_scores':
+            requirePost();
+            if ($userRole !== 'admin') {
+                jsonResponse(403, false, 'Тільки для адміністратора');
+            }
+
+            $db->exec('DELETE FROM answers');
+            $db->exec(
+                'UPDATE game_state
+                 SET current_question_id = NULL,
+                     is_button_locked = 0,
+                     locked_by_team = NULL,
+                     locked_by_user_id = NULL,
+                     is_game_active = 0
+                 WHERE id = 1'
+            );
+            try {
+                $db->exec('DELETE FROM score_adjustments');
+            } catch (Exception $e) {
+                // Таблиця score_adjustments може не існувати
+                error_log('reset_scores: score_adjustments table not found: ' . $e->getMessage());
+            }
+
+            jsonResponse(200, true, 'Рахунок обнулено! Гру скинуто.');
+            break;
+
         default:
             jsonResponse(400, false, 'Невідома дія');
     }

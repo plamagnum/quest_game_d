@@ -52,6 +52,7 @@ function escAdm(string $s): string {
         <button class="admin-tab" data-tab="questions" onclick="switchAdminTab('questions')">❓ Запитання</button>
         <button class="admin-tab" data-tab="analytics" onclick="switchAdminTab('analytics')">📊 Аналітика</button>
         <button class="admin-tab" data-tab="results" onclick="switchAdminTab('results')">🏆 Результати</button>
+        <button class="admin-tab" data-tab="players" onclick="switchAdminTab('players')">👥 Гравці</button>
     </nav>
 
     <!-- ===== ВКЛАДКА: Керування грою ===== -->
@@ -94,6 +95,11 @@ function escAdm(string $s): string {
             <button onclick="adminAction('stop')" class="btn-danger" id="btn-stop-game">⏹️ Зупинити гру</button>
             <button onclick="adminAction('next')" class="btn-primary" id="btn-next-q">⏭️ Наступне запитання</button>
             <button onclick="adminAction('reset')" class="btn-warning" id="btn-reset-buzz">🔄 Скинути блокування</button>
+        </div>
+
+        <!-- Обнулення рахунку -->
+        <div style="margin-top:16px">
+            <button onclick="resetScores()" class="btn-danger">🗑️ Обнулити рахунок</button>
         </div>
 
         <!-- Рахунок -->
@@ -238,6 +244,33 @@ function escAdm(string $s): string {
                     </tr>
                 </thead>
                 <tbody id="results-detail-tbody"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- ===== ВКЛАДКА: Гравці ===== -->
+    <section id="tab-players" class="admin-section hidden">
+        <h2>👥 Управління гравцями</h2>
+
+        <div class="analytics-controls">
+            <button onclick="loadPlayers()" class="btn-primary">🔄 Оновити</button>
+            <input type="text" id="players-filter" placeholder="🔍 Фільтр по імені..." oninput="filterPlayers()">
+        </div>
+
+        <div class="table-responsive">
+            <table class="data-table" id="players-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>👤 Ім'я</th>
+                        <th>🏁 Команда</th>
+                        <th>🔑 Роль</th>
+                        <th>📊 Статус</th>
+                        <th>📅 Дата реєстрації</th>
+                        <th>⚙️ Дії</th>
+                    </tr>
+                </thead>
+                <tbody id="players-tbody"></tbody>
             </table>
         </div>
     </section>
