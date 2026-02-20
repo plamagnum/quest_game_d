@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS `users` (
     `password_hash` VARCHAR(255) NOT NULL,
     `team`          TINYINT UNSIGNED NOT NULL DEFAULT 1 COMMENT '1 = Команда 1, 2 = Команда 2',
     `role`          ENUM('user','admin') NOT NULL DEFAULT 'user',
+    `is_blocked`    TINYINT(1) NOT NULL DEFAULT 0,
     `created_at`    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX `idx_team` (`team`),
     INDEX `idx_role` (`role`)

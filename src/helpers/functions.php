@@ -64,6 +64,16 @@ function requireAuth(): void
     if (!isset($_SESSION['user_id'])) {
         jsonResponse(401, false, 'Не авторизовано');
     }
+
+    // Перевірка блокування
+    $db   = Database::getConnection();
+    $stmt = $db->prepare('SELECT is_blocked FROM users WHERE id = ?');
+    $stmt->execute([(int)$_SESSION['user_id']]);
+    $user = $stmt->fetch();
+    if ($user && (int)$user['is_blocked'] === 1) {
+        session_destroy();
+        jsonResponse(403, false, 'Ваш акаунт заблоковано');
+    }
 }
 
 /**
