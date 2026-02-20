@@ -446,16 +446,19 @@ function updateBuzzButton(data) {
         buzzBtn.querySelector('.buzz-text').innerHTML = 'Я знаю<br>відповідь!';
         if (buzzStatus) buzzStatus.textContent = 'Натисніть кнопку, якщо знаєте відповідь!';
     } else if (data.locked_by_user_id === data.my_user_id) {
-        // Я натиснув — показати варіанти
+        // Я натиснув — показати варіанти або повідомлення
         buzzBtn.disabled = true;
         buzzBtn.className = 'buzz-button my-team-locked';
         buzzBtn.querySelector('.buzz-icon').textContent = '✅';
         buzzBtn.querySelector('.buzz-text').innerHTML = 'Ви<br>натиснули!';
-        if (buzzStatus) buzzStatus.textContent = 'Оберіть відповідь нижче!';
 
         // Показати варіанти тільки натиснувшему
-        if (data.current_question && data.current_question.options) {
+        if (data.show_options !== false && data.current_question && data.current_question.options) {
             showOptions(data.current_question.options);
+            if (buzzStatus) buzzStatus.textContent = 'Оберіть відповідь нижче!';
+        } else {
+            hideOptions();
+            if (buzzStatus) buzzStatus.textContent = '🎤 Відповідайте усно! Адміністратор оцінить відповідь.';
         }
     } else if (data.locked_by_team === data.my_team) {
         // Мій тімейт натиснув
@@ -710,6 +713,17 @@ function pollAdminState() {
 
         if (scoreT1 && d.scores && d.scores[0]) scoreT1.textContent = d.scores[0].total_points;
         if (scoreT2 && d.scores && d.scores[1]) scoreT2.textContent = d.scores[1].total_points;
+
+        var toggleBtn = document.getElementById('btn-toggle-options');
+        if (toggleBtn) {
+            if (d.show_options) {
+                toggleBtn.textContent = '👁️ Вар. відповідей: ВКЛ';
+                toggleBtn.className = 'btn-primary';
+            } else {
+                toggleBtn.textContent = '🙈 Вар. відповідей: ВИКЛ';
+                toggleBtn.className = 'btn-warning';
+            }
+        }
     })
     .catch(function (err) {
         console.warn('Admin poll error:', err);
@@ -1280,7 +1294,75 @@ function resetScores() {
 }
 
 // ================================================================
-// 10. УПРАВЛІННЯ ГРАВЦЯМИ
+// 10. КОРИГУВАННЯ БАЛІВ
+// ================================================================
+
+/**
+ * Коригувати бали команди (тільки адмін)
+ * @param {Event} e
+ */
+function handleAdjustScore(e) {
+    e.preventDefault();
+
+    var team   = parseInt(document.getElementById('adjust-team').value, 10);
+    var points = parseInt(document.getElementById('adjust-points').value, 10);
+    var reason = document.getElementById('adjust-reason').value.trim();
+
+    if (isNaN(points) || points === 0) {
+        alert('Введіть кількість балів (не 0)');
+        return;
+    }
+
+    var sign = points > 0 ? '+' : '';
+    if (!confirm('Коригувати бали Команди ' + team + ': ' + sign + points + '?')) return;
+
+    fetch('/api/quest.php?action=adjust_score', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ team: team, points: points, reason: reason })
+    })
+    .then(function (res) { return res.json(); })
+    .then(function (data) {
+        alert(data.message);
+        if (data.success) {
+            document.getElementById('adjust-points').value = '';
+            document.getElementById('adjust-reason').value = '';
+            pollAdminState();
+            loadDetailedResults();
+        }
+    })
+    .catch(function (err) {
+        alert('Помилка: ' + err.message);
+    });
+}
+
+// ================================================================
+// 11. ПЕРЕМИКАННЯ ВАРІАНТІВ ВІДПОВІДЕЙ
+// ================================================================
+
+/**
+ * Перемкнути показ варіантів відповідей (тільки адмін)
+ */
+function toggleOptions() {
+    fetch('/api/quest.php?action=toggle_options', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+    })
+    .then(function (res) { return res.json(); })
+    .then(function (data) {
+        alert(data.message);
+        if (data.success) {
+            pollAdminState();
+        }
+    })
+    .catch(function (err) {
+        alert('Помилка: ' + err.message);
+    });
+}
+
+// ================================================================
+// 12. УПРАВЛІННЯ ГРАВЦЯМИ
 // ================================================================
 
 /** @type {Array} Кеш списку гравців для фільтрації */

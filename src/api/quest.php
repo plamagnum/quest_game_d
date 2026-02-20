@@ -66,7 +66,8 @@ try {
             }
 
             // Рахунок
-                        // Назви команд
+            $scores = getTeamScores($db);
+            // Назви команд
             $teamNames = getTeamNames($db);
 
             echo json_encode([
@@ -83,6 +84,7 @@ try {
                     'scores'             => $scores,
                     'team1_name'         => $teamNames['team1_name'],
                     'team2_name'         => $teamNames['team2_name'],
+                    'show_options'       => (bool)$state['show_options'],
                 ],
             ], JSON_UNESCAPED_UNICODE);
             break;
@@ -395,6 +397,66 @@ try {
             }
 
             jsonResponse(200, true, 'Рахунок обнулено! Гру скинуто.');
+            break;
+
+        // ============================================================
+        // КОРИГУВАННЯ БАЛІВ (тільки адмін)
+        // ============================================================
+        case 'adjust_score':
+            requirePost();
+            if ($userRole !== 'admin') {
+                jsonResponse(403, false, 'Тільки для адміністратора');
+            }
+
+            $data   = getJsonInput();
+            $team   = (int)($data['team'] ?? 0);
+            $points = (int)($data['points'] ?? 0);
+            $reason = trim($data['reason'] ?? '');
+
+            if ($team < 1 || $team > 2) {
+                jsonResponse(400, false, 'Невірна команда');
+            }
+            if ($points === 0) {
+                jsonResponse(400, false, 'Кількість балів не може бути 0');
+            }
+            if ($points < -1000 || $points > 1000) {
+                jsonResponse(400, false, 'Кількість балів: від -1000 до 1000');
+            }
+
+            $stmt = $db->prepare(
+                'INSERT INTO score_adjustments (team, points, reason, created_by) VALUES (?, ?, ?, ?)'
+            );
+            $stmt->execute([$team, $points, $reason ?: null, $userId]);
+
+            $sign = $points > 0 ? '+' : '';
+            jsonResponse(200, true, "Бали команди $team скориговано: {$sign}{$points}", [
+                'team'   => $team,
+                'points' => $points,
+            ]);
+            break;
+
+        // ============================================================
+        // ПЕРЕМИКАННЯ ВАРІАНТІВ ВІДПОВІДЕЙ (тільки адмін)
+        // ============================================================
+        case 'toggle_options':
+            requirePost();
+            if ($userRole !== 'admin') {
+                jsonResponse(403, false, 'Тільки для адміністратора');
+            }
+
+            $data = getJsonInput();
+            $showOptions = isset($data['show_options']) ? (int)(bool)$data['show_options'] : null;
+
+            if ($showOptions === null) {
+                // Toggle
+                $state = getGameState($db);
+                $showOptions = $state['show_options'] ? 0 : 1;
+            }
+
+            $db->prepare('UPDATE game_state SET show_options = ? WHERE id = 1')->execute([$showOptions]);
+
+            $msg = $showOptions ? 'Варіанти відповідей УВІМКНЕНО' : 'Варіанти відповідей ВИМКНЕНО';
+            jsonResponse(200, true, $msg, ['show_options' => (bool)$showOptions]);
             break;
 
         default:

@@ -32,6 +32,7 @@ function getGameState(PDO $db): array
             'locked_by_team'      => null,
             'locked_by_user_id'   => null,
             'is_game_active'      => 0,
+            'show_options'        => 1,
         ];
     }
 
@@ -79,6 +80,24 @@ function getTeamScores(PDO $db): array
                 'total_answers'   => (int)$row['total_answers'],
             ];
         }
+    }
+
+    // Додати ручні коригування
+    try {
+        $adjStmt = $db->query(
+            'SELECT team, COALESCE(SUM(points), 0) AS adj_points
+             FROM score_adjustments
+             GROUP BY team'
+        );
+        foreach ($adjStmt->fetchAll() as $adj) {
+            $idx = (int)$adj['team'] - 1;
+            if (isset($scores[$idx])) {
+                $scores[$idx]['total_points'] += (int)$adj['adj_points'];
+                $scores[$idx]['adjustment_points'] = (int)$adj['adj_points'];
+            }
+        }
+    } catch (PDOException $e) {
+        // Таблиця може не існувати
     }
 
     return $scores;
