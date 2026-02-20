@@ -95,6 +95,7 @@ function escAdm(string $s): string {
             <button onclick="adminAction('stop')" class="btn-danger" id="btn-stop-game">⏹️ Зупинити гру</button>
             <button onclick="adminAction('next')" class="btn-primary" id="btn-next-q">⏭️ Наступне запитання</button>
             <button onclick="adminAction('reset')" class="btn-warning" id="btn-reset-buzz">🔄 Скинути блокування</button>
+            <button onclick="toggleOptions()" class="btn-primary" id="btn-toggle-options">👁️ Вар. відповідей: ВКЛ</button>
         </div>
 
         <!-- Обнулення рахунку -->
@@ -115,6 +116,33 @@ function escAdm(string $s): string {
                     <strong id="admin-score-t2">0</strong>
                 </div>
             </div>
+        </div>
+
+        <!-- Коригування балів -->
+        <div class="game-status-card" style="margin-top:20px">
+            <h3>⚖️ Коригування балів</h3>
+            <form id="adjust-score-form" onsubmit="handleAdjustScore(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="adjust-team">Команда</label>
+                        <select id="adjust-team" required>
+                            <option value="1">🔵 Команда 1</option>
+                            <option value="2">🔴 Команда 2</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="adjust-points">Бали (+/-)</label>
+                        <input type="number" id="adjust-points" placeholder="напр. 10 або -5" required min="-1000" max="1000">
+                    </div>
+                    <div class="form-group">
+                        <label for="adjust-reason">Причина (необов'язково)</label>
+                        <input type="text" id="adjust-reason" placeholder="Бонус за активність..." maxlength="255">
+                    </div>
+                    <div class="form-group" style="display:flex;align-items:flex-end">
+                        <button type="submit" class="btn-primary">⚖️ Застосувати</button>
+                    </div>
+                </div>
+            </form>
         </div>
     </section>
 

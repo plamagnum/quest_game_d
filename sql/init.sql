@@ -66,6 +66,7 @@ CREATE TABLE IF NOT EXISTS `game_state` (
     `locked_by_team`      TINYINT UNSIGNED DEFAULT NULL,
     `locked_by_user_id`   INT UNSIGNED DEFAULT NULL,
     `is_game_active`      TINYINT(1) NOT NULL DEFAULT 0,
+    `show_options`        TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1=показувати варіанти, 0=сховати',
     `updated_at`          TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (`current_question_id`) REFERENCES `questions`(`id`) ON DELETE SET NULL,
     FOREIGN KEY (`locked_by_user_id`)   REFERENCES `users`(`id`)     ON DELETE SET NULL
@@ -89,6 +90,20 @@ CREATE TABLE IF NOT EXISTS `user_analytics` (
     INDEX `idx_ua_user` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ----------------------------
+-- Таблиця: score_adjustments
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `score_adjustments` (
+    `id`         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `team`       TINYINT UNSIGNED NOT NULL COMMENT '1 = Команда 1, 2 = Команда 2',
+    `points`     INT NOT NULL COMMENT 'Додані або відняті бали (може бути від''ємним)',
+    `reason`     VARCHAR(255) DEFAULT NULL,
+    `created_by` INT UNSIGNED NOT NULL,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (`created_by`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+    INDEX `idx_team` (`team`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- =============================================================
 -- ПОЧАТКОВІ ДАНІ
 -- =============================================================
@@ -99,8 +114,8 @@ INSERT INTO `users` (`username`, `password_hash`, `team`, `role`) VALUES
 ('admin', '$2y$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 1, 'admin');
 
 -- Ініціалізація стану гри (один рядок з id=1)
-INSERT INTO `game_state` (`id`, `current_question_id`, `is_button_locked`, `is_game_active`)
-VALUES (1, NULL, 0, 0);
+INSERT INTO `game_state` (`id`, `current_question_id`, `is_button_locked`, `is_game_active`, `show_options`)
+VALUES (1, NULL, 0, 0, 1);
 
 -- =============================================================
 -- 15 запитань про безпеку в Інтернеті (українською)
